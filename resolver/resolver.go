@@ -5,9 +5,19 @@ import (
 	"net"
 )
 
+type Resolver struct {
+	storage ResolverStorage
+}
+
 // IPLookup takes a ip string and returns domains assocatiated.
-func IPLookup(ip string) (domains []string, err error) {
+func(r *Resolver) IPLookup(ip string) (domains []string, err error) {
 	addr, err := net.LookupAddr(ip)
+	if err != nil {
+		return addr, fmt.Errorf("lookup ip error: %s", err.Error())
+	}
+
+	//do a merge of the domains for newer ones from the net lookup
+	r.storage.GetByIP(ip)
 	if err != nil {
 		return addr, fmt.Errorf("lookup ip error: %s", err.Error())
 	}
