@@ -3,16 +3,16 @@ package resolver
 import "time"
 
 type DomainRecord struct {
-	ID    int64
-	Name  string
-	IP    string
-	Valid time.Time
+	ID     int64
+	Domain string
+	IP     string
+	Valid  time.Time
 }
 
 type ResolverStorage interface {
-	GetByDomain(domain string) (DomainRecord, error)
 	GetByIP(IP string) ([]DomainRecord, error)
-	GetByID(ID int64) (DomainRecord, error)
-	BulkInsert([]DomainRecord) (bool, error)
+	GetOldest(limit int) ([]DomainRecord, error)
 	Insert(DomainRecord) (ID int64, err error)
+	InsertOrUpdate(DomainRecord) error
+	Update(ID int64, record DomainRecord) error
 }

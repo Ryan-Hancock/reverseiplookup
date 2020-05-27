@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 	"reverseiplookup/resolver"
 	"time"
@@ -26,7 +27,7 @@ type Storage struct {
 
 // SetupDB brings back the storage object
 func SetupDB() Storage {
-	db, err := sqlx.Connect("mysql", "root:dev@(127.0.0.1:3306)/domains?charset=utf8")
+	db, err := sqlx.Connect("mysql", "root:dev@(127.0.0.1:3306)/domains?charset=utf8&parseTime=true")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -36,31 +37,25 @@ func SetupDB() Storage {
 	return Storage{DB: db}
 }
 
-// GetByDomain ...
-func (s *Storage) GetByDomain(domain string) (resolver.DomainRecord, error) {
-	return s.Record, nil
-}
-
 // GetByIP ...
-func (s *Storage) GetByIP(IP string) ([]resolver.DomainRecord, error) {
-	return nil, nil
+func (s Storage) GetByIP(IP string) ([]resolver.DomainRecord, error) {
+	rec := []resolver.DomainRecord{}
+	err := s.DB.Select(&rec, "SELECT * FROM records WHERE ip = ?", IP)
+	return rec, err
 }
 
-// GetByID ...
-func (s *Storage) GetByID(ID int64) (resolver.DomainRecord, error) {
-	return s.Record, nil
-}
-
-// BulkInsert ...
-func (s *Storage) BulkInsert([]resolver.DomainRecord) (bool, error) {
-	return true, nil
+// GetOldest ...
+func (s Storage) GetOldest(limit int) ([]resolver.DomainRecord, error) {
+	rec := []resolver.DomainRecord{}
+	err := s.DB.Select(&rec, "SELECT * FROM records ORDER BY `valid` ASC LIMIT ?", limit)
+	return rec, err
 }
 
 // Insert ...
-func (s *Storage) Insert(dr resolver.DomainRecord) (ID int64, err error) {
+func (s Storage) Insert(dr resolver.DomainRecord) (ID int64, err error) {
 	r, err := s.DB.NamedExec(`INSERT INTO records (domain,ip,valid) VALUES (:domain,:ip,:valid)`,
 		map[string]interface{}{
-			"domain": dr.Name,
+			"domain": dr.Domain,
 			"ip":     dr.IP,
 			"valid":  time.Now(),
 		})
@@ -70,4 +65,50 @@ func (s *Storage) Insert(dr resolver.DomainRecord) (ID int64, err error) {
 	id, _ := r.LastInsertId()
 
 	return id, nil
+}
+
+// InsertOrUpdate ...
+func (s Storage) InsertOrUpdate(dr resolver.DomainRecord) (err error) {
+	res, err := s.DB.NamedExec(`UPDATE records SET valid=:valid WHERE domain=:domain AND ip=:ip`,
+		map[string]interface{}{
+			"domain": dr.Domain,
+			"ip":     dr.IP,
+			"valid":  dr.Valid,
+		})
+	if err != nil && err != sql.ErrNoRows {
+		log.Println(err, "hello")
+		return err
+	}
+
+	rows, _ := res.RowsAffected()
+	if rows == 0 || err == sql.ErrNoRows {
+		_, err := s.DB.NamedExec(`INSERT INTO records (domain,ip,valid) VALUES (:domain,:ip,:valid)`,
+			map[string]interface{}{
+				"domain": dr.Domain,
+				"ip":     dr.IP,
+				"valid":  dr.Valid,
+			})
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	return nil
+}
+
+//Update ...
+func (s Storage) Update(ID int64, record resolver.DomainRecord) (err error) {
+	_, err = s.DB.NamedExec(`UPDATE records SET domain=:domain, ip=:ip, valid=:valid WHERE id=:id`,
+		map[string]interface{}{
+			"id":     ID,
+			"domain": record.Domain,
+			"ip":     record.IP,
+			"valid":  record.Valid,
+		})
+	if err != nil {
+		return err
+	}
+
+	return err
 }

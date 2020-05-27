@@ -5,13 +5,24 @@ import (
 	"reverseiplookup/resolver"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jasonlvhit/gocron"
 )
 
 func main() {
 	r := gin.Default()
+
+	storage := SetupDB()
+	resolv := resolver.NewResolver(storage)
+
+	go func() {
+		s := gocron.NewScheduler()
+		s.Every(1).Hours().Do(resolv.UpdateValid, 100)
+		<-s.Start()
+	}()
+
 	r.GET("/ip/:address", func(c *gin.Context) {
 		addr := c.Param("address")
-		list, err := resolver.IPLookup(addr)
+		list, err := resolv.IPLookup(addr)
 		if err != nil {
 			c.AbortWithError(http.StatusBadRequest, err)
 			return
@@ -23,7 +34,7 @@ func main() {
 	})
 	r.GET("/domain/:address", func(c *gin.Context) {
 		addr := c.Param("address")
-		list, err := resolver.HostLookup(addr)
+		list, err := resolv.HostLookup(addr)
 		if err != nil {
 			c.AbortWithError(http.StatusBadRequest, err)
 			return
