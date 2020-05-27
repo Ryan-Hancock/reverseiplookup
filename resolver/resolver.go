@@ -94,7 +94,8 @@ func (r *Resolver) UpdateValid(limit int) error {
 
 		for _, d := range doms {
 			if a.Domain == d.Domain {
-				err = r.storage.Update(a.ID, DomainRecord{Domain: a.Domain, IP: a.IP, Valid: time.Now()})
+				a.Valid = time.Now()
+				err = r.storage.Update(a.ID, a)
 				if err != nil {
 					log.Println(err)
 				}
