@@ -2,11 +2,12 @@ import React from "react";
 import { Container, Row, Col } from "reactstrap";
 import SearchBar from "./components/SearchBar.js";
 import DomainTable from "./components/DomainTable.js";
+import ApiHandler from "./apiHandler.js";
 
 function App() {
   const handleSearchClick = (e) => {
     console.log(e);
-    //api call domains/
+    ApiHandler.searchByDomain(e);
   };
 
   return (
