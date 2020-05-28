@@ -4,13 +4,12 @@ import (
 	"net/http"
 	"reverseiplookup/resolver"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/jasonlvhit/gocron"
 )
 
 func main() {
-	r := gin.Default()
-
 	storage := SetupDB()
 	resolv := resolver.NewResolver(storage)
 
@@ -19,6 +18,9 @@ func main() {
 		s.Every(1).Hours().Do(resolv.UpdateValid, 100)
 		<-s.Start()
 	}()
+
+	r := gin.Default()
+	r.Use(cors.Default())
 
 	r.GET("/ip/:address", func(c *gin.Context) {
 		addr := c.Param("address")
@@ -44,5 +46,6 @@ func main() {
 			"message": list,
 		})
 	})
+
 	r.Run()
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"log"
+	"os"
 	"reverseiplookup/resolver"
 	"time"
 
@@ -27,7 +28,7 @@ type Storage struct {
 
 // SetupDB brings back the storage object
 func SetupDB() Storage {
-	db, err := sqlx.Connect("mysql", "root:dev@(127.0.0.1:3306)/domains?charset=utf8&parseTime=true")
+	db, err := sqlx.Connect("mysql", os.Getenv("DB_CONN"))
 	if err != nil {
 		log.Fatalln(err)
 	}
