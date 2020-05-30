@@ -3,6 +3,7 @@ import { Container, Row, Col } from "reactstrap";
 import SearchBar from "./components/SearchBar.js";
 import DomainTable from "./components/DomainTable.js";
 import ApiHandler from "./apiHandler.js";
+require("dotenv").config();
 
 function App() {
   const [domainRows, setDomainRows] = useState([]);

@@ -15,6 +15,7 @@ const ApiHandler = {
     }
   },
   async searchByDomain(address) {
+    console.log(process.env);
     try {
       const response = await this.client.get(`/domain/${address}`);
       return response.data;

@@ -12,13 +12,15 @@ import (
 )
 
 var schema = `
+CREATE DATABASE IF NOT EXISTS domains;
+
 CREATE TABLE IF NOT EXISTS records (
 	id INT(11) NOT NULL AUTO_INCREMENT,
 	domain VARCHAR(255) NOT NULL,
 	ip VARCHAR(16) NOT NULL,
 	valid DATETIME NOT NULL,
 	PRIMARY KEY (id) USING BTREE
-)
+);
 `
 
 type Storage struct {
