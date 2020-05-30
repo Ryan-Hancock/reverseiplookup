@@ -45,12 +45,17 @@ Hitting the endpoints will validate and insert/update DNS hostnames.
 ```json
 GET /ip/:address
 response: {
+<<<<<<< HEAD
   "message": [{domain: abc, validFrom: date}]
 }
+=======
+  "message": [{"domain": "abc", "validFrom": "date"}]
+}  
+>>>>>>> 43d90fdf5769890ddbca211cb23603b6b61b3eaa
 
 GET /domain/:address
 response: {
-  "message": [{domain: abc, validFrom: date}]
+  "message": [{"domain": "abc", "validFrom": "date"}]
 }
 ```
 
